@@ -2,16 +2,16 @@ namespace LTBlog.Test;
 
 using LTBlog.Data;
 using Microsoft.EntityFrameworkCore;
+using Xunit.Abstractions;
 
-public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatabaseFixture> {
+public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output) : IClassFixture<TestDatabaseFixture> {
+    private readonly TestDatabaseFixture fixture = fixture;
 
-    public required TestDatabaseFixture Fixture {
-        get; init;
-    } = fixture;
+    private readonly ITestOutputHelper output = output;
 
     [Fact]
     public void AddArticle() {
-        using var db = Fixture.CreateContext();
+        using var db = CreateContext();
         var article = new Article {
             Title = "Test Article",
             Tags = [],
@@ -29,7 +29,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddArticleWithTag() {
-        using var db = Fixture.CreateContext();
+        using var db = CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -56,7 +56,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddTag() {
-        using var db = Fixture.CreateContext();
+        using var db = CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -73,7 +73,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddTagWithArticle() {
-        using var db = Fixture.CreateContext();
+        using var db = CreateContext();
         var article = new Article {
             Title = "Test Article",
             Tags = [],
@@ -100,7 +100,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void ArticleWithExistTag() {
-        using var db = Fixture.CreateContext();
+        using var db = CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -124,18 +124,24 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
             db.Tags.ExecuteDelete();
         }
     }
+
+    private ArticleContext CreateContext() =>
+        fixture.CreateContext(options =>
+        options.LogTo(output.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
 }
 
 public sealed class TestDatabaseFixture {
-    private const string ConnectionString = "Host=localhost;Database=test;Username=postgres;Password=&0k42^V2EOD*AjS;Include Error Detail=true";
+
+    private const string ConnectionString =
+        "Host=localhost;Database=test;Username=postgres;Password=&0k42^V2EOD*AjS;Include Error Detail=true";
+
     private static readonly object _lock = new();
     private static bool _databaseInitialized;
 
-    private readonly DbContextOptions<ArticleContext> options =
+    private readonly DbContextOptionsBuilder<ArticleContext> options =
         new DbContextOptionsBuilder<ArticleContext>()
             .UseNpgsql(ConnectionString)
-            .UseSnakeCaseNamingConvention()
-            .Options;
+            .UseSnakeCaseNamingConvention();
 
     public TestDatabaseFixture() {
         lock (_lock) {
@@ -150,6 +156,8 @@ public sealed class TestDatabaseFixture {
         }
     }
 
-    public ArticleContext CreateContext() =>
-        new(options);
+    public ArticleContext CreateContext(Func<DbContextOptionsBuilder<ArticleContext>, DbContextOptionsBuilder<ArticleContext>> func) =>
+        new(func(options).Options);
+
+    public ArticleContext CreateContext() => new(options.Options);
 }
