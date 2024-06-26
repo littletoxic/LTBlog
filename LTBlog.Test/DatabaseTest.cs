@@ -4,10 +4,14 @@ using LTBlog.Data;
 using Microsoft.EntityFrameworkCore;
 
 public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatabaseFixture> {
-    private readonly ArticleContext db = fixture.Context;
+
+    public required TestDatabaseFixture Fixture {
+        get; init;
+    } = fixture;
 
     [Fact]
     public void AddArticle() {
+        using var db = Fixture.CreateContext();
         var article = new Article {
             Title = "Test Article",
             Tags = [],
@@ -25,6 +29,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddArticleWithTag() {
+        using var db = Fixture.CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -51,6 +56,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddTag() {
+        using var db = Fixture.CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -67,6 +73,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void AddTagWithArticle() {
+        using var db = Fixture.CreateContext();
         var article = new Article {
             Title = "Test Article",
             Tags = [],
@@ -93,6 +100,7 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
 
     [Fact]
     public void ArticleWithExistTag() {
+        using var db = Fixture.CreateContext();
         var tag = new Tag {
             Name = "Test Tag",
             Articles = []
@@ -118,25 +126,30 @@ public class DatabaseTest(TestDatabaseFixture fixture) : IClassFixture<TestDatab
     }
 }
 
-public sealed class TestDatabaseFixture : IDisposable {
+public sealed class TestDatabaseFixture {
+    private const string ConnectionString = "Host=localhost;Database=test;Username=postgres;Password=&0k42^V2EOD*AjS;Include Error Detail=true";
+    private static readonly object _lock = new();
+    private static bool _databaseInitialized;
 
-    public TestDatabaseFixture() {
-        var options = new DbContextOptionsBuilder<ArticleContext>()
-            .UseNpgsql("Host=localhost;Database=test;Username=postgres;Password=&0k42^V2EOD*AjS;Include Error Detail=true")
+    private readonly DbContextOptions<ArticleContext> options =
+        new DbContextOptionsBuilder<ArticleContext>()
+            .UseNpgsql(ConnectionString)
             .UseSnakeCaseNamingConvention()
             .Options;
-        Context = new(options);
 
-        Context.Database.EnsureDeleted();
-        Context.Database.EnsureCreated();
+    public TestDatabaseFixture() {
+        lock (_lock) {
+            if (!_databaseInitialized) {
+                using var db = CreateContext();
+
+                db.Database.EnsureDeleted();
+                db.Database.EnsureCreated();
+
+                _databaseInitialized = true;
+            }
+        }
     }
 
-    public required ArticleContext Context {
-        get; init;
-    }
-
-    public void Dispose() {
-        Context.Database.EnsureDeleted();
-        Context.Dispose();
-    }
+    public ArticleContext CreateContext() =>
+        new(options);
 }
