@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LTBlog", "LTBlog\LTBlog.csproj", "{F21E26D4-9033-4BAD-8D06-2197604AC64F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LTBlog", "LTBlog\LTBlog.csproj", "{F21E26D4-9033-4BAD-8D06-2197604AC64F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LTBlog.Test", "LTBlog.Test\LTBlog.Test.csproj", "{551C980F-CE72-4BBF-96CA-AE9519503490}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F21E26D4-9033-4BAD-8D06-2197604AC64F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F21E26D4-9033-4BAD-8D06-2197604AC64F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F21E26D4-9033-4BAD-8D06-2197604AC64F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{551C980F-CE72-4BBF-96CA-AE9519503490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{551C980F-CE72-4BBF-96CA-AE9519503490}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{551C980F-CE72-4BBF-96CA-AE9519503490}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{551C980F-CE72-4BBF-96CA-AE9519503490}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
