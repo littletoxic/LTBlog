@@ -18,13 +18,6 @@ public class ArticleContext(DbContextOptions<ArticleContext> options) : DbContex
                 .HasDefaultValueSql("now()");
             a.Property(a => a.UpdatedAt)
                 .HasDefaultValueSql("now()");
-            a.Property<int>("Id");
-            a.HasKey("Id");
-        });
-
-        modelBuilder.Entity<Tag>(a => {
-            a.Property<int>("Id");
-            a.HasKey("Id");
         });
     }
 }

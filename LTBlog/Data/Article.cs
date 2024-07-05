@@ -10,6 +10,10 @@ public class Article {
         get; set;
     }
 
+    public int Id {
+        get; init;
+    }
+
     public virtual required List<Tag> Tags {
         get; set;
     }
