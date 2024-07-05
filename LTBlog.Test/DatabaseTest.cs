@@ -11,117 +11,132 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
     [Fact]
     public void AddArticle() {
-        using var db = CreateContext();
-        var article = new Article {
-            Title = "Test Article",
-            Tags = [],
-            Content = "This is a test article."
-        };
-        db.Attach(article);
-        db.SaveChanges();
+        // arrange
+        int articleId;
+        using (var db = CreateContext()) {
+            var article = new Article {
+                Title = "Test Article",
+                Tags = [],
+                Content = "This is a test article."
+            };
+            db.Articles.Add(article);
+            db.SaveChanges();
+            articleId = article.Id;
+        }
 
-        try {
-            Assert.Equal(1, db.Articles.Count());
-        } finally {
-            db.Articles.ExecuteDelete();
+        // assert
+        using (var db = CreateContext()) {
+            try {
+                var article = db.Articles.FirstOrDefault(a => a.Id == articleId);
+                Assert.NotNull(article);
+                Assert.Equal("Test Article", article.Title);
+                Assert.Equal("This is a test article.", article.Content);
+            } finally {
+                // Cleanup
+                db.Articles.ExecuteDelete();
+            }
         }
     }
 
     [Fact]
-    public void AddArticleWithTag() {
-        using var db = CreateContext();
-        var tag = new Tag {
-            Name = "Test Tag",
-            Articles = []
-        };
-        db.Attach(tag);
-        db.SaveChanges();
+    public void AddArticleWithExistTag() {
+        // arrange
+        int tagId;
+        using (var db = CreateContext()) {
+            var tag = new Tag {
+                Name = "Test Tag",
+                Articles = []
+            };
+            db.Tags.Add(tag);
+            db.SaveChanges();
+            tagId = tag.Id;
+        }
 
-        var article = new Article {
-            Title = "Test Article",
-            Tags = [tag],
-            Content = "This is a test article."
-        };
-        db.Attach(article);
-        db.SaveChanges();
+        // act
+        using (var db = CreateContext()) {
+            var article = new Article {
+                Title = "Test Article",
+                Tags = [.. db.Tags.Where(t => t.Id == tagId)],
+                Content = "This is a test article."
+            };
+            db.Articles.Add(article);
+            db.SaveChanges();
+        }
 
-        try {
-            Assert.Equal(1, db.Articles.Count());
-            Assert.Equal(1, db.Tags.Count());
-        } finally {
-            db.Articles.ExecuteDelete();
-            db.Tags.ExecuteDelete();
+        // assert
+        using (var db = CreateContext()) {
+            try {
+                var article = db.Articles.Include(a => a.Tags).FirstOrDefault();
+                Assert.NotNull(article);
+                Assert.Equal("Test Article", article.Title);
+                Assert.Single(article.Tags);
+                Assert.Equal(tagId, article.Tags[0].Id);
+            } finally {
+                db.Articles.ExecuteDelete();
+                db.Tags.ExecuteDelete();
+            }
         }
     }
 
     [Fact]
     public void AddTag() {
-        using var db = CreateContext();
-        var tag = new Tag {
-            Name = "Test Tag",
-            Articles = []
-        };
-        db.Attach(tag);
-        db.SaveChanges();
+        // arrange
+        int tagId;
+        using (var db = CreateContext()) {
+            var tag = new Tag {
+                Name = "Test Tag",
+                Articles = []
+            };
+            db.Tags.Add(tag);
+            db.SaveChanges();
+            tagId = tag.Id;
+        }
 
-        try {
-            Assert.Equal(1, db.Tags.Count());
-        } finally {
-            db.Tags.ExecuteDelete();
+        // assert
+        using (var db = CreateContext()) {
+            try {
+                var tag = db.Tags.FirstOrDefault(t => t.Id == tagId);
+                Assert.NotNull(tag);
+                Assert.Equal("Test Tag", tag.Name);
+            } finally {
+                // Cleanup
+                db.Tags.ExecuteDelete();
+            }
         }
     }
 
     [Fact]
-    public void AddTagWithArticle() {
-        using var db = CreateContext();
-        var article = new Article {
-            Title = "Test Article",
-            Tags = [],
-            Content = "This is a test article."
-        };
-        db.Attach(article);
-        db.SaveChanges();
-
-        var tag = new Tag {
-            Name = "Test Tag",
-            Articles = [article]
-        };
-        db.Attach(tag);
-        db.SaveChanges();
-
-        try {
-            Assert.Equal(1, db.Articles.Count());
-            Assert.Equal(1, db.Tags.Count());
-        } finally {
-            db.Articles.ExecuteDelete();
-            db.Tags.ExecuteDelete();
+    public void ModifyUpdatedAt() {
+        // arrange
+        using (var db = CreateContext()) {
+            var article = new Article {
+                Title = "Test Article",
+                Tags = [],
+                Content = "This is a test article."
+            };
+            db.Attach(article);
+            db.SaveChanges();
         }
-    }
 
-    [Fact]
-    public void ArticleWithExistTag() {
-        using var db = CreateContext();
-        var tag = new Tag {
-            Name = "Test Tag",
-            Articles = []
-        };
-        db.Attach(tag);
-        db.SaveChanges();
+        // act
+        var updatedAt = DateTimeOffset.UtcNow;
+        using (var db = CreateContext()) {
+            var articleToUpdate = db.Articles.First();
+            articleToUpdate.UpdatedAt = updatedAt;
+            articleToUpdate.Title = "Modified Article";
+            db.SaveChanges();
+        }
 
-        var article = new Article {
-            Title = "Test Article",
-            Tags = [.. db.Tags.Where(t => t.Name == "Test Tag")],
-            Content = "This is a test article."
-        };
-        db.Attach(article);
-        db.SaveChanges();
-
-        try {
-            Assert.Equal(1, db.Articles.Count());
-            Assert.Equal(1, db.Tags.Count());
-        } finally {
-            db.Articles.ExecuteDelete();
-            db.Tags.ExecuteDelete();
+        // assert
+        using (var db = CreateContext()) {
+            var article = db.Articles.First();
+            try {
+                Assert.Equal("Modified Article", article.Title);
+                Assert.Equal(updatedAt, article.UpdatedAt);
+                Assert.NotEqual(article.CreatedAt, article.UpdatedAt);
+            } finally {
+                db.Articles.ExecuteDelete();
+            }
         }
     }
 
