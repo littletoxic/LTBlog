@@ -108,6 +108,7 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
     [Fact]
     public void ModifyUpdatedAt() {
         // arrange
+        int articleId;
         using (var db = CreateContext()) {
             var article = new Article {
                 Title = "Test Article",
@@ -116,12 +117,13 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
             };
             db.Attach(article);
             db.SaveChanges();
+            articleId = article.Id;
         }
 
         // act
         var updatedAt = DateTimeOffset.UtcNow;
         using (var db = CreateContext()) {
-            var articleToUpdate = db.Articles.First();
+            var articleToUpdate = db.Articles.First(a => a.Id == articleId);
             articleToUpdate.UpdatedAt = updatedAt;
             articleToUpdate.Title = "Modified Article";
             db.SaveChanges();
@@ -129,11 +131,14 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
         // assert
         using (var db = CreateContext()) {
-            var article = db.Articles.First();
+            var article = db.Articles.First(a => a.Id == articleId);
             try {
                 Assert.Equal("Modified Article", article.Title);
-                Assert.Equal(updatedAt, article.UpdatedAt);
                 Assert.NotEqual(article.CreatedAt, article.UpdatedAt);
+
+                // 允许一定的时间差异，以适应数据库和 .NET 的时间精度差异
+                var timeDifference = Math.Abs((article.UpdatedAt - updatedAt).TotalMilliseconds);
+                Assert.True(timeDifference < 1, $"Expected the time difference to be less than 1 millisecond, but got {timeDifference} milliseconds.");
             } finally {
                 db.Articles.ExecuteDelete();
             }
@@ -142,7 +147,7 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
     private ArticleContext CreateContext() =>
         fixture.CreateContext(options =>
-        options.LogTo(output.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
+            options.LogTo(output.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
 }
 
 public sealed class TestDatabaseFixture {
