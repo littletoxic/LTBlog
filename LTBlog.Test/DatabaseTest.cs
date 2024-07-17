@@ -26,15 +26,13 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
         // assert
         using (var db = CreateContext()) {
-            try {
-                var article = db.Articles.FirstOrDefault(a => a.Id == articleId);
-                Assert.NotNull(article);
-                Assert.Equal("Test Article", article.Title);
-                Assert.Equal("This is a test article.", article.Content);
-            } finally {
-                // Cleanup
-                db.Articles.ExecuteDelete();
-            }
+            var article = db.Articles.FirstOrDefault(a => a.Id == articleId);
+            Assert.NotNull(article);
+            Assert.Equal("Test Article", article.Title);
+            Assert.Equal("This is a test article.", article.Content);
+
+            // Cleanup
+            db.Articles.ExecuteDelete();
         }
     }
 
@@ -65,16 +63,15 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
         // assert
         using (var db = CreateContext()) {
-            try {
-                var article = db.Articles.Include(a => a.Tags).FirstOrDefault();
-                Assert.NotNull(article);
-                Assert.Equal("Test Article", article.Title);
-                Assert.Single(article.Tags);
-                Assert.Equal(tagId, article.Tags[0].Id);
-            } finally {
-                db.Articles.ExecuteDelete();
-                db.Tags.ExecuteDelete();
-            }
+            var article = db.Articles.Include(a => a.Tags).FirstOrDefault();
+            Assert.NotNull(article);
+            Assert.Equal("Test Article", article.Title);
+            Assert.Single(article.Tags);
+            Assert.Equal(tagId, article.Tags[0].Id);
+
+            // Cleanup
+            db.Articles.ExecuteDelete();
+            db.Tags.ExecuteDelete();
         }
     }
 
@@ -94,14 +91,12 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
 
         // assert
         using (var db = CreateContext()) {
-            try {
-                var tag = db.Tags.FirstOrDefault(t => t.Id == tagId);
-                Assert.NotNull(tag);
-                Assert.Equal("Test Tag", tag.Name);
-            } finally {
-                // Cleanup
-                db.Tags.ExecuteDelete();
-            }
+            var tag = db.Tags.FirstOrDefault(t => t.Id == tagId);
+            Assert.NotNull(tag);
+            Assert.Equal("Test Tag", tag.Name);
+
+            // Cleanup
+            db.Tags.ExecuteDelete();
         }
     }
 
@@ -132,52 +127,19 @@ public class DatabaseTest(TestDatabaseFixture fixture, ITestOutputHelper output)
         // assert
         using (var db = CreateContext()) {
             var article = db.Articles.First(a => a.Id == articleId);
-            try {
-                Assert.Equal("Modified Article", article.Title);
-                Assert.NotEqual(article.CreatedAt, article.UpdatedAt);
+            Assert.Equal("Modified Article", article.Title);
+            Assert.NotEqual(article.CreatedAt, article.UpdatedAt);
 
-                // 允许一定的时间差异，以适应数据库和 .NET 的时间精度差异
-                var timeDifference = Math.Abs((article.UpdatedAt - updatedAt).TotalMilliseconds);
-                Assert.True(timeDifference < 1, $"Expected the time difference to be less than 1 millisecond, but got {timeDifference} milliseconds.");
-            } finally {
-                db.Articles.ExecuteDelete();
-            }
+            // 允许一定的时间差异，以适应数据库和 .NET 的时间精度差异
+            var timeDifference = Math.Abs((article.UpdatedAt - updatedAt).TotalMilliseconds);
+            Assert.True(timeDifference < 1, $"Expected the time difference to be less than 1 millisecond, but got {timeDifference} milliseconds.");
+
+            // Cleanup
+            db.Articles.ExecuteDelete();
         }
     }
 
     private ArticleContext CreateContext() =>
         fixture.CreateContext(options =>
             options.LogTo(output.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
-}
-
-public sealed class TestDatabaseFixture {
-
-    private const string ConnectionString =
-        "Host=localhost;Database=test;Username=postgres;Password=&0k42^V2EOD*AjS;Include Error Detail=true";
-
-    private static readonly object _lock = new();
-    private static bool _databaseInitialized;
-
-    private readonly DbContextOptionsBuilder<ArticleContext> options =
-        new DbContextOptionsBuilder<ArticleContext>()
-            .UseNpgsql(ConnectionString)
-            .UseSnakeCaseNamingConvention();
-
-    public TestDatabaseFixture() {
-        lock (_lock) {
-            if (!_databaseInitialized) {
-                using var db = CreateContext();
-
-                db.Database.EnsureDeleted();
-                db.Database.EnsureCreated();
-
-                _databaseInitialized = true;
-            }
-        }
-    }
-
-    public ArticleContext CreateContext(Func<DbContextOptionsBuilder<ArticleContext>, DbContextOptionsBuilder<ArticleContext>> func) =>
-        new(func(options).Options);
-
-    public ArticleContext CreateContext() => new(options.Options);
 }
