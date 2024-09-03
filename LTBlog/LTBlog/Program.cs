@@ -1,3 +1,4 @@
+using LTBlog;
 using LTBlog.Components;
 using LTBlog.Data;
 using LTBlog.Sensor;
@@ -21,7 +22,7 @@ builder.Services.AddResponseCompression(opts => {
         ["application/octet-stream"]);
 });
 
-// builder.Services.AddSensorWorker();
+builder.Services.AddSensorWorker();
 
 var app = builder.Build();
 

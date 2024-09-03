@@ -4,6 +4,7 @@ using System.Threading;
 using Iot.Device.Bmxx80;
 using Iot.Device.CharacterLcd;
 using Iot.Device.Common;
+using LTBlog.Client.Model;
 using Microsoft.AspNetCore.SignalR;
 using UnitsNet;
 
@@ -49,32 +50,32 @@ public class SensorWorker(
             var altValue = WeatherHelper.CalculateAltitude(
                     (Pressure)result.Pressure!, WeatherHelper.MeanSeaLevel, (Temperature)result.Temperature!);
 
-            var state = new {
-                temperature = result.Temperature?.DegreesCelsius ?? 0,
-                heatIndex = heatIndex.DegreesCelsius,
-                pressure = result.Pressure?.Hectopascals ?? 0,
-                altitude = altValue.Meters,
-                humidity = result.Humidity?.Percent ?? 0
+            var state = new SensorState {
+                Temperature = result.Temperature?.DegreesCelsius ?? 0,
+                HeatIndex = heatIndex.DegreesCelsius,
+                Pressure = result.Pressure?.Hectopascals ?? 0,
+                Altitude = altValue.Meters,
+                Humidity = result.Humidity?.Percent ?? 0
             };
 
             lcd.SetCursorPosition(0, 0);
             lcd.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             lcd.SetCursorPosition(10, 1);
-            lcd.Write($"{state.humidity,5:#0.00}");
+            lcd.Write($"{state.Humidity,5:#0.00}");
 
             lcd.SetCursorPosition(13, 2);
-            lcd.Write($"{state.temperature,4:0.0}");
+            lcd.Write($"{state.Temperature,4:0.0}");
 
             lcd.SetCursorPosition(12, 3);
-            lcd.Write($"{state.heatIndex,4:0.0}");
+            lcd.Write($"{state.HeatIndex,4:0.0}");
 
             if (loop++ % 600 == 0) {
-                logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", state.temperature);
-                logger.LogInformation("Pressure: {Pressure:0.##}hPa", state.pressure);
-                logger.LogInformation("Altitude: {Altitude:0.##}m", state.altitude);
-                logger.LogInformation("Relative humidity: {Humidity:0.##}%", state.humidity);
-                logger.LogInformation("Heat Index: {HeatIndex:0.#}\u00B0C", state.heatIndex);
+                logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", state.Temperature);
+                logger.LogInformation("Pressure: {Pressure:0.##}hPa", state.Pressure);
+                logger.LogInformation("Altitude: {Altitude:0.##}m", state.Altitude);
+                logger.LogInformation("Relative humidity: {Humidity:0.##}%", state.Humidity);
+                logger.LogInformation("Heat Index: {HeatIndex:0.#}\u00B0C", state.HeatIndex);
             }
 
             await hubContext.Clients.All.SendAsync("ReceiveState", state, stoppingToken);
