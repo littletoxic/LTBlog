@@ -21,7 +21,7 @@ builder.Services.AddResponseCompression(opts => {
         ["application/octet-stream"]);
 });
 
-builder.Services.AddSensorWorker();
+// builder.Services.AddSensorWorker();
 
 var app = builder.Build();
 
@@ -38,5 +38,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(LTBlog.Client._Imports).Assembly);
+
+app.MapHub<SensorHub>("/sensorhub");
 
 await app.RunAsync();

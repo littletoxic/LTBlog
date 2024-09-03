@@ -4,13 +4,14 @@ using System.Threading;
 using Iot.Device.Bmxx80;
 using Iot.Device.CharacterLcd;
 using Iot.Device.Common;
-using Microsoft.Extensions.Hosting.Systemd;
+using Microsoft.AspNetCore.SignalR;
 using UnitsNet;
 
 public class SensorWorker(
     ILogger<SensorWorker> logger,
     Bme280 bme280,
-    Lcd2004 lcd) : BackgroundService {
+    Lcd2004 lcd,
+    IHubContext<SensorHub> hubContext) : BackgroundService {
     private uint loop = 0;
     private int measurementDuration;
 
@@ -18,7 +19,6 @@ public class SensorWorker(
         logger.LogInformation("Iot service starting");
         measurementDuration = bme280.GetMeasurementDuration();
         logger.LogInformation("Measurement duration: {MeasurementDuration}ms", measurementDuration);
-        logger.LogInformation("Systemd support enabled: {Enabled}", SystemdHelpers.IsSystemdService());
 
         var result = await bme280.ReadAsync();
         var heatIndex = WeatherHelper.CalculateHeatIndex(
@@ -46,28 +46,38 @@ public class SensorWorker(
             var result = await bme280.ReadAsync();
             var heatIndex = WeatherHelper.CalculateHeatIndex(
                 (Temperature)result.Temperature!, (RelativeHumidity)result.Humidity!);
+            var altValue = WeatherHelper.CalculateAltitude(
+                    (Pressure)result.Pressure!, WeatherHelper.MeanSeaLevel, (Temperature)result.Temperature!);
+
+            var state = new {
+                temperature = result.Temperature?.DegreesCelsius ?? 0,
+                heatIndex = heatIndex.DegreesCelsius,
+                pressure = result.Pressure?.Hectopascals ?? 0,
+                altitude = altValue.Meters,
+                humidity = result.Humidity?.Percent ?? 0
+            };
 
             lcd.SetCursorPosition(0, 0);
             lcd.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             lcd.SetCursorPosition(10, 1);
-            lcd.Write($"{result.Humidity?.Percent,5:#0.00}");
+            lcd.Write($"{state.humidity,5:#0.00}");
 
             lcd.SetCursorPosition(13, 2);
-            lcd.Write($"{result.Temperature?.DegreesCelsius,4:0.0}");
+            lcd.Write($"{state.temperature,4:0.0}");
 
             lcd.SetCursorPosition(12, 3);
-            lcd.Write($"{heatIndex.DegreesCelsius,4:0.0}");
+            lcd.Write($"{state.heatIndex,4:0.0}");
 
             if (loop++ % 600 == 0) {
-                var altValue = WeatherHelper.CalculateAltitude(
-                    (Pressure)result.Pressure!, WeatherHelper.MeanSeaLevel, (Temperature)result.Temperature!);
-                logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", result.Temperature?.DegreesCelsius);
-                logger.LogInformation("Pressure: {Pressure:0.##}hPa", result.Pressure?.Hectopascals);
-                logger.LogInformation("Altitude: {Altitude:0.##}m", altValue.Meters);
-                logger.LogInformation("Relative humidity: {Humidity:0.##}%", result.Humidity?.Percent);
-                logger.LogInformation("Heat Index: {HeatIndex:0.#}\u00B0C", heatIndex.DegreesCelsius);
+                logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", state.temperature);
+                logger.LogInformation("Pressure: {Pressure:0.##}hPa", state.pressure);
+                logger.LogInformation("Altitude: {Altitude:0.##}m", state.altitude);
+                logger.LogInformation("Relative humidity: {Humidity:0.##}%", state.humidity);
+                logger.LogInformation("Heat Index: {HeatIndex:0.#}\u00B0C", state.heatIndex);
             }
+
+            await hubContext.Clients.All.SendAsync("ReceiveState", state, stoppingToken);
         }
     }
 }

@@ -1,4 +1,40 @@
 ﻿@page "/"
+@rendermode InteractiveWebAssembly
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
 
 <PageTitle>Home</PageTitle>
 
+<p>612: </p>
+
+@if(state is not null) {
+    <p>温度: @state.temperature</p>
+    <p>湿度: @state.humidity</p>
+}
+
+<hr>
+
+@code {
+    private HubConnection? hubConnection;
+    private dynamic? state;
+
+    protected override async Task OnInitializedAsync() {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/sensorhub"))
+            .Build();
+
+        hubConnection.On<dynamic>("ReceiveState", state => {
+            this.state = state;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync() {
+        if (hubConnection is not null) {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
