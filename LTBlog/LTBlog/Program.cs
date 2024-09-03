@@ -1,5 +1,6 @@
 using LTBlog.Components;
 using LTBlog.Data;
+using LTBlog.Sensor;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,8 @@ builder.Services.AddResponseCompression(opts => {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         ["application/octet-stream"]);
 });
+
+builder.Services.AddSensorWorker();
 
 var app = builder.Build();
 
