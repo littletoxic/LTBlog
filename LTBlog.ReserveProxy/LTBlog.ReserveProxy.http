@@ -1,0 +1,6 @@
+@LTBlog.ReserveProxy_HostAddress = http://localhost:5166
+
+GET {{LTBlog.ReserveProxy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
