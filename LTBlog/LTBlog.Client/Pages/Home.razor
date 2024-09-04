@@ -8,18 +8,19 @@
 
 <PageTitle>Home</PageTitle>
 
-<p>612: </p>
+<LoadingProgress>
+    <p>612: </p>
 
-@if(state is SensorState s) {
-    <p>@($"时间: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}")</p>
-    <p>@($"温度: {s.Temperature:0.0}°C")</p>
-    <p>@($"相对湿度: {s.Humidity:#0.00}%")</p>
-    <p>@($"体感温度: {s.HeatIndex:0.0}°C")</p>
-    <p>@($"海拔高度: {s.Altitude:0.0}m")</p>
-}
+    @if (state is SensorState s) {
+        <p>@($"时间: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}")</p>
+        <p>@($"温度: {s.Temperature:0.0}°C")</p>
+        <p>@($"相对湿度: {s.Humidity:#0.00}%")</p>
+        <p>@($"体感温度: {s.HeatIndex:0.0}°C")</p>
+        <p>@($"海拔高度: {s.Altitude:0.0}m")</p>
+    }
 
-是否连接服务： @hubConnection?.State
-
+    是否连接服务： @hubConnection?.State
+</LoadingProgress>
 <hr>
 
 @code {

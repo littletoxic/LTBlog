@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LTBlog", "LTBlog\LTBlog\LTB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LTBlog.Client", "LTBlog\LTBlog.Client\LTBlog.Client.csproj", "{F2D17BF4-7F05-46E6-AD49-E1A5218B64E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LTBlog.ReserveProxy", "LTBlog.ReserveProxy\LTBlog.ReserveProxy.csproj", "{4656B5AC-8BE5-4C1A-9CA9-500677695093}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LTBlog.ReserveProxy", "LTBlog.ReserveProxy\LTBlog.ReserveProxy.csproj", "{4656B5AC-8BE5-4C1A-9CA9-500677695093}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

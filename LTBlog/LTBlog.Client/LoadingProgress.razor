@@ -1,0 +1,35 @@
+﻿@if (!OperatingSystem.IsBrowser()) {
+    <HeadContent>
+        <style>
+            .linear-progress {
+                background: silver;
+                width: 50vw;
+                border-radius: 10rem;
+                overflow: hidden;
+                height: 1rem;
+                position: relative;
+            }
+
+            .linear-progress:after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: blue;
+                scale: var(--blazor-load-percentage, 0%) 100%;
+                transform-origin: left top;
+                transition: scale ease-out 0.5s;
+            }
+        </style>
+    </HeadContent>
+    <p>wasm 资源加载中</p>
+    <div class="linear-progress"></div>
+} else {
+    @ChildContent
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent {
+        get; set;
+    }
+}
