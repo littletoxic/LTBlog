@@ -30,6 +30,7 @@
     protected override async Task OnInitializedAsync() {
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/sensorhub"))
+            .AddMessagePackProtocol()
             .Build();
 
         hubConnection.On<SensorState>("ReceiveState", state => {

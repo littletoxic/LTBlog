@@ -1,4 +1,3 @@
-using LTBlog;
 using LTBlog.Components;
 using LTBlog.Data;
 using LTBlog.Sensor;
@@ -6,6 +5,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.ConfigureHostOptions(host => {
+    host.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
 
 builder.Services.AddDbContext<ArticleContext>(options =>
     options.UseNpgsql("Host=localhost;Database=articles;Username=postgres;Password=&0k42^V2EOD*AjS")
@@ -15,7 +18,8 @@ builder.Services.AddDbContext<ArticleContext>(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddMessagePackProtocol();
 
 builder.Services.AddResponseCompression(opts => {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
