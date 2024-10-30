@@ -1,8 +1,8 @@
 ﻿namespace LTBlog.Sensor;
 
 using System.Threading;
+using System.Threading.Channels;
 using Iot.Device.Bmxx80;
-using Iot.Device.CharacterLcd;
 using Iot.Device.Common;
 using LTBlog.Client.Model;
 using Microsoft.AspNetCore.SignalR;
@@ -11,31 +11,17 @@ using UnitsNet;
 public class SensorWorker(
     ILogger<SensorWorker> logger,
     Bme280 bme280,
-    Lcd2004 lcd,
-    IHubContext<SensorHub> hubContext) : BackgroundService {
+    IHubContext<SensorHub, IStateClient> hubContext,
+    Channel<SensorState> channel) : BackgroundService {
     private uint loop = 0;
     private int measurementDuration;
 
     public override async Task StartAsync(CancellationToken cancellationToken) {
-        logger.LogInformation("Iot service starting");
+        logger.LogInformation("Sensor service starting");
+
         measurementDuration = bme280.GetMeasurementDuration();
+
         logger.LogInformation("Measurement duration: {MeasurementDuration}ms", measurementDuration);
-
-        var result = await bme280.ReadAsync();
-        var heatIndex = WeatherHelper.CalculateHeatIndex(
-                (Temperature)result.Temperature!, (RelativeHumidity)result.Humidity!);
-
-        lcd.SetCursorPosition(0, 0);
-        lcd.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-        lcd.SetCursorPosition(0, 1);
-        lcd.Write($"Humidity: {result.Humidity?.Percent,5:#0.00}%");
-
-        lcd.SetCursorPosition(0, 2);
-        lcd.Write($"Temperature: {result.Temperature?.DegreesCelsius,4:0.0}\u00DFC");
-
-        lcd.SetCursorPosition(0, 3);
-        lcd.Write($"Heat Index: {heatIndex.DegreesCelsius,4:0.0}\u00DFC");
 
         await base.StartAsync(cancellationToken);
     }
@@ -58,18 +44,6 @@ public class SensorWorker(
                 Humidity = result.Humidity?.Percent ?? 0
             };
 
-            lcd.SetCursorPosition(0, 0);
-            lcd.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            lcd.SetCursorPosition(10, 1);
-            lcd.Write($"{state.Humidity,5:#0.00}");
-
-            lcd.SetCursorPosition(13, 2);
-            lcd.Write($"{state.Temperature,4:0.0}");
-
-            lcd.SetCursorPosition(12, 3);
-            lcd.Write($"{state.HeatIndex,4:0.0}");
-
             if (loop++ % 600 == 0) {
                 logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", state.Temperature);
                 logger.LogInformation("Pressure: {Pressure:0.##}hPa", state.Pressure);
@@ -78,7 +52,8 @@ public class SensorWorker(
                 logger.LogInformation("Heat Index: {HeatIndex:0.#}\u00B0C", state.HeatIndex);
             }
 
-            await hubContext.Clients.All.SendAsync("ReceiveState", state, stoppingToken);
+            await channel.Writer.WriteAsync(state, stoppingToken);
+            await hubContext.Clients.All.ReceiveState(state);
         }
     }
 }

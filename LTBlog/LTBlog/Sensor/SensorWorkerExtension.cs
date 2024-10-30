@@ -6,11 +6,14 @@ using Iot.Device.CharacterLcd;
 using Iot.Device.Pcx857x;
 using System.Device.Gpio;
 using System.Device.I2c;
+using System.Threading.Channels;
+using LTBlog.Client.Model;
 
 public static class SensorWorkerExtension {
 
     public static IServiceCollection AddSensorWorker(this IServiceCollection serviceCollection) {
         serviceCollection.AddHostedService<SensorWorker>();
+        serviceCollection.AddHostedService<LcdWorker>();
         serviceCollection.AddSingleton(sp => {
             var i2c = I2cDevice.Create(new(0, Bmx280Base.SecondaryI2cAddress));
             var bme280 = new Bme280(i2c) {
@@ -34,6 +37,7 @@ public static class SensorWorkerExtension {
                 1,
                 new GpioController(PinNumberingScheme.Logical, driver));
         });
+        serviceCollection.AddSingleton(_ => Channel.CreateUnbounded<SensorState>());
         return serviceCollection;
     }
 }
