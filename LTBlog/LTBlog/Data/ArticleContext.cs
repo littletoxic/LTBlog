@@ -13,10 +13,10 @@ public class ArticleContext(DbContextOptions<ArticleContext> options) : DbContex
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
-        modelBuilder.Entity<Article>(a => {
-            a.Property(a => a.CreatedAt)
+        modelBuilder.Entity<Article>(builder => {
+            builder.Property(a => a.CreatedAt)
                 .HasDefaultValueSql("now()");
-            a.Property(a => a.UpdatedAt)
+            builder.Property(a => a.UpdatedAt)
                 .HasDefaultValueSql("now()");
         });
     }

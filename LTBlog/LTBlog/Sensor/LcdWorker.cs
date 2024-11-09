@@ -3,7 +3,7 @@
 using System.Threading;
 using System.Threading.Channels;
 using Iot.Device.CharacterLcd;
-using LTBlog.Client.Model;
+using Client.Model;
 
 public class LcdWorker(
     ILogger<LcdWorker> logger,

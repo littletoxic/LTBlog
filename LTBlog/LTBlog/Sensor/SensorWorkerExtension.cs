@@ -7,16 +7,16 @@ using Iot.Device.Pcx857x;
 using System.Device.Gpio;
 using System.Device.I2c;
 using System.Threading.Channels;
-using LTBlog.Client.Model;
+using Client.Model;
 
 public static class SensorWorkerExtension {
 
     public static IServiceCollection AddSensorWorker(this IServiceCollection serviceCollection) {
         serviceCollection.AddHostedService<SensorWorker>();
         serviceCollection.AddHostedService<LcdWorker>();
-        serviceCollection.AddSingleton(sp => {
-            var i2c = I2cDevice.Create(new(0, Bmx280Base.SecondaryI2cAddress));
-            var bme280 = new Bme280(i2c) {
+        serviceCollection.AddSingleton(_ => {
+            var iic = I2cDevice.Create(new(0, Bmx280Base.SecondaryI2cAddress));
+            var bme280 = new Bme280(iic) {
                 TemperatureSampling = Sampling.HighResolution,
                 PressureSampling = Sampling.UltraHighResolution,
                 HumiditySampling = Sampling.HighResolution,
@@ -25,9 +25,9 @@ public static class SensorWorkerExtension {
             bme280.SetPowerMode(Bmx280PowerMode.Normal);
             return bme280;
         });
-        serviceCollection.AddSingleton(sp => {
-            var i2c = I2cDevice.Create(new(1, 0x27));
-            var driver = new Pcf8574(i2c);
+        serviceCollection.AddSingleton(_ => {
+            var iic = I2cDevice.Create(new(1, 0x27));
+            var driver = new Pcf8574(iic);
             return new Lcd2004(
                 0,
                 2,
@@ -35,7 +35,7 @@ public static class SensorWorkerExtension {
                 3,
                 0.1f,
                 1,
-                new GpioController(PinNumberingScheme.Logical, driver));
+                new(PinNumberingScheme.Logical, driver));
         });
         serviceCollection.AddSingleton(_ => Channel.CreateUnbounded<SensorState>());
         return serviceCollection;

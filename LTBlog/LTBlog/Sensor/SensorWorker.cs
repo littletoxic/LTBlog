@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using Iot.Device.Bmxx80;
 using Iot.Device.Common;
-using LTBlog.Client.Model;
+using Client.Model;
 using Microsoft.AspNetCore.SignalR;
 using UnitsNet;
 
@@ -13,22 +13,22 @@ public class SensorWorker(
     Bme280 bme280,
     IHubContext<SensorHub, IStateClient> hubContext,
     Channel<SensorState> channel) : BackgroundService {
-    private uint loop = 0;
-    private int measurementDuration;
+    private uint _loop;
+    private int _measurementDuration;
 
     public override async Task StartAsync(CancellationToken cancellationToken) {
         logger.LogInformation("Sensor service starting");
 
-        measurementDuration = bme280.GetMeasurementDuration();
+        _measurementDuration = bme280.GetMeasurementDuration();
 
-        logger.LogInformation("Measurement duration: {MeasurementDuration}ms", measurementDuration);
+        logger.LogInformation("Measurement duration: {MeasurementDuration}ms", _measurementDuration);
 
         await base.StartAsync(cancellationToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         while (!stoppingToken.IsCancellationRequested) {
-            await Task.Delay(1000 - measurementDuration, stoppingToken);
+            await Task.Delay(1000 - _measurementDuration, stoppingToken);
 
             var result = await bme280.ReadAsync();
             var heatIndex = WeatherHelper.CalculateHeatIndex(
@@ -44,7 +44,7 @@ public class SensorWorker(
                 Humidity = result.Humidity?.Percent ?? 0
             };
 
-            if (loop++ % 600 == 0) {
+            if (_loop++ % 600 == 0) {
                 logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", state.Temperature);
                 logger.LogInformation("Pressure: {Pressure:0.##}hPa", state.Pressure);
                 logger.LogInformation("Altitude: {Altitude:0.##}m", state.Altitude);

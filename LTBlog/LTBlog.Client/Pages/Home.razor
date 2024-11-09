@@ -2,7 +2,6 @@
 @rendermode InteractiveWebAssembly
 @using LTBlog.Client.Model
 @using Microsoft.AspNetCore.SignalR.Client
-@using System.Text.Json
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
@@ -12,39 +11,39 @@
 <LoadingProgress>
     <p>612: </p>
 
-    @if (state is SensorState s) {
-        <p>@($"时间: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}")</p>
+    @if (_state is { } s) {
+        <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
         <p>@($"温度: {s.Temperature:0.0}°C")</p>
         <p>@($"相对湿度: {s.Humidity:#0.00}%")</p>
         <p>@($"体感温度: {s.HeatIndex:0.0}°C")</p>
         <p>@($"海拔高度: {s.Altitude:0.0}m")</p>
     }
 
-    是否连接服务： @hubConnection?.State
+    是否连接服务： @_hubConnection?.State
 </LoadingProgress>
 <hr>
 
 @code {
-    private HubConnection? hubConnection;
-    private SensorState? state;
+    private HubConnection? _hubConnection;
+    private SensorState? _state;
 
     protected override async Task OnInitializedAsync() {
-        hubConnection = new HubConnectionBuilder()
+        _hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/sensorhub"))
             .AddMessagePackProtocol()
             .Build();
 
-        hubConnection.On<SensorState>("ReceiveState", state => {
-            this.state = state;
+        _hubConnection.On<SensorState>("ReceiveState", state => {
+            this._state = state;
             InvokeAsync(StateHasChanged);
         });
 
-        await hubConnection.StartAsync();
+        await _hubConnection.StartAsync();
     }
 
     public async ValueTask DisposeAsync() {
-        if (hubConnection is not null) {
-            await hubConnection.DisposeAsync();
+        if (_hubConnection is not null) {
+            await _hubConnection.DisposeAsync();
         }
     }
 }

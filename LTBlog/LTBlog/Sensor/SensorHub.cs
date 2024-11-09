@@ -1,6 +1,6 @@
 ﻿namespace LTBlog.Sensor;
 
-using LTBlog.Client.Model;
+using Client.Model;
 using Microsoft.AspNetCore.SignalR;
 
 public class SensorHub : Hub<IStateClient> {
