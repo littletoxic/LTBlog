@@ -34,7 +34,7 @@
             .Build();
 
         _hubConnection.On<SensorState>("ReceiveState", state => {
-            this._state = state;
+            _state = state;
             InvokeAsync(StateHasChanged);
         });
 
