@@ -1,6 +1,0 @@
-services:
-  ltblog:
-    image: ${DOCKER_REGISTRY-}ltblog
-    build:
-      context: .
-      dockerfile: LTBlog/LTBlog/Dockerfile
