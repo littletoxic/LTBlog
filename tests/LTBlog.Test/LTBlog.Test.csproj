@@ -31,8 +31,4 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LTBlog\LTBlog\LTBlog.csproj" />
-  </ItemGroup>
-
 </Project>
