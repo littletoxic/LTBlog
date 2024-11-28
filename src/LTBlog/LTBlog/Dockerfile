@@ -7,20 +7,19 @@ WORKDIR /app
 # 此阶段用于生成服务项目
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0-noble AS build
 ARG BUILD_CONFIGURATION=Release
-ARG TARGETARCH
 WORKDIR /src
 COPY --link ["LTBlog/LTBlog.csproj", "LTBlog/"]
 COPY --link ["LTBlog.Client/LTBlog.Client.csproj", "LTBlog.Client/"]
-RUN dotnet restore "./LTBlog/LTBlog.csproj" -a $TARGETARCH
+RUN dotnet restore "./LTBlog/LTBlog.csproj"
 COPY --link . .
 WORKDIR "/src/LTBlog"
-RUN dotnet build "./LTBlog.csproj" -c $BUILD_CONFIGURATION -o /app/build -a $TARGETARCH
+RUN dotnet build "./LTBlog.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # 此阶段用于发布要复制到最终阶段的服务项目
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 ARG TARGETARCH
-RUN dotnet publish "./LTBlog.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false -a $TARGETARCH
+RUN dotnet publish "./LTBlog.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # 此阶段在生产中使用，或在常规模式下从 VS 运行时使用(在不使用调试配置时为默认值)
 FROM base AS final
