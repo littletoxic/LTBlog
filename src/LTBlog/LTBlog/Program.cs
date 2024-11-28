@@ -26,8 +26,6 @@ builder.Services.AddResponseCompression(opts => {
         ["application/octet-stream"]);
 });
 
-builder.Services.AddSystemd();
-
 builder.Services.AddSensorWorker();
 
 var app = builder.Build();
