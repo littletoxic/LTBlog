@@ -21,10 +21,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSignalR()
     .AddMessagePackProtocol();
 
-builder.Services.AddResponseCompression(opts => {
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        ["application/octet-stream"]);
-});
+builder.Services.AddResponseCompression();
 
 builder.Services.AddSensorWorker();
 
