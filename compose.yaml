@@ -7,3 +7,5 @@ services:
       - "/dev/i2c-0:/dev/i2c-0"
       - "/dev/i2c-1:/dev/i2c-1"
     restart: unless-stopped
+    # non-root 容器中获取足够权限访问设备
+    user: '1654:994'
