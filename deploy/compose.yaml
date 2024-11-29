@@ -1,6 +1,14 @@
 name: blog
 
 services:
+  pre-process:
+    image: busybox
+    volumes:
+      - server-secrets:/secrets
+    # 另一个容器预处理卷的权限问题
+    # -R 表示递归
+    entrypoint: chown -R 1654 /secrets
+
   blog-server:
     image: littletoxic/blog-server
     ports:
@@ -13,6 +21,9 @@ services:
     user: '1654:994'
     volumes:
       - server-secrets:/app/secrets
+    depends_on:
+      pre-process:
+        condition: service_completed_successfully
 
 volumes:
   server-secrets:
