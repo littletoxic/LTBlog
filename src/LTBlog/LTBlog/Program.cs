@@ -26,7 +26,7 @@ builder.Services.AddResponseCompression();
 builder.Services.AddSensorWorker();
 
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new("/secrets/DataProtection-Keys"));
+    .PersistKeysToFileSystem(new("/app/secrets/DataProtection-Keys"));
 
 var app = builder.Build();
 

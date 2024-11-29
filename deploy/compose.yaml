@@ -12,7 +12,7 @@ services:
     # non-root 容器中获取足够权限访问设备
     user: '1654:994'
     volumes:
-      - server-secrets:/secrets
+      - server-secrets:/app/secrets
 
 volumes:
   server-secrets:
