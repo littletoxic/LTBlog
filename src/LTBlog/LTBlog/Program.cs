@@ -1,7 +1,6 @@
 using LTBlog.Components;
 using LTBlog.Data;
 using LTBlog.Sensor;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
