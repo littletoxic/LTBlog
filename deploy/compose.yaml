@@ -1,3 +1,5 @@
+name: blog
+
 services:
   blog-server:
     image: littletoxic/blog-server
@@ -9,3 +11,8 @@ services:
     restart: unless-stopped
     # non-root 容器中获取足够权限访问设备
     user: '1654:994'
+    volumes:
+      - server-secrets:/secrets
+
+volumes:
+  server-secrets:

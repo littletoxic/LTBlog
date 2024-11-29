@@ -1,6 +1,7 @@
 using LTBlog.Components;
 using LTBlog.Data;
 using LTBlog.Sensor;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,9 @@ builder.Services.AddSignalR()
 builder.Services.AddResponseCompression();
 
 builder.Services.AddSensorWorker();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new("/secrets/DataProtection-Keys"));
 
 var app = builder.Build();
 
