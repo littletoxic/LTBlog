@@ -3,6 +3,10 @@ using LTBlog.Data;
 using LTBlog.Sensor;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +31,24 @@ builder.Services.AddSensorWorker();
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new("/app/secrets/DataProtection-Keys"));
+
+builder.Services.AddOpenTelemetry()
+    .UseOtlpExporter()
+    .ConfigureResource(resource => resource
+        .AddService(builder.Environment.ApplicationName)
+        .AddProcessRuntimeDetector()
+        .AddContainerDetector()
+        .AddHostDetector())
+    .WithLogging()
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddProcessInstrumentation())
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation());
+
 
 var app = builder.Build();
 

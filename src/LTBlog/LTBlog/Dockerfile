@@ -27,4 +27,4 @@ EXPOSE 8080
 WORKDIR /app
 COPY --link --from=publish /app/publish .
 USER $APP_UID
-ENTRYPOINT ["dotnet", "LTBlog.dll"]
+ENTRYPOINT ["dotnet", "blog-server.dll"]
