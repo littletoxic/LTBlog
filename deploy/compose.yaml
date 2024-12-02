@@ -24,6 +24,77 @@ services:
     depends_on:
       pre-process:
         condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+    networks:
+      - default
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    container_name: otel-collector
+    restart: unless-stopped
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - /:/hostfs:ro
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - 55679:55679
+    networks:
+      - default
+    depends_on:
+      - prometheus
+      - loki
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus-config.yaml
+      - --web.enable-otlp-receiver
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+      - prometheus-data:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - default
+    depends_on:
+      - grafana
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - default
+
+  loki:
+    image: grafana/loki
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - 3100:3100
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki-data:/loki
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    networks:
+      - default
+    depends_on:
+      - grafana
 
 volumes:
   server-secrets:
+  loki-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  default:
