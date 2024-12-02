@@ -3,6 +3,7 @@ name: blog
 services:
   pre-process:
     image: busybox
+    container_name: pre-process
     volumes:
       - server-secrets:/secrets
     # 另一个容器预处理卷的权限问题
@@ -11,6 +12,7 @@ services:
 
   blog-server:
     image: littletoxic/blog-server
+    container_name: blog-server
     ports:
       - "5000:8080/tcp"
     devices:
