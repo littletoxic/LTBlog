@@ -1,0 +1,17 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+
+@Api_HostAddress = http://localhost:5291
+
+GET {{Api_HostAddress}}/weatherforecast/
+Accept: application/json
+Host: api.littletoxic.top
+
+###
+
+GET {{Api_HostAddress}}
+Host: littletoxic.top
+
+###
+
+GET {{Api_HostAddress}}/not/exist
+Host: littletoxic.top
