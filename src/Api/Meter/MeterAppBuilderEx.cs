@@ -6,11 +6,15 @@ using Iot.Device.Bmxx80.PowerMode;
 using Iot.Device.CharacterLcd;
 using Iot.Device.Pcx857x;
 using LTBlog.Data;
+using Microsoft.Extensions.Hosting;
 
 namespace LTBlog.Api.Meter;
 
 public static class MeterAppBuilderEx {
-    public static IServiceCollection AddMeterWorker(this IServiceCollection serviceCollection) {
+    public static IServiceCollection
+        AddMeterWorker(this IServiceCollection serviceCollection, IWebHostEnvironment env) {
+        if (!env.IsProduction()) return serviceCollection;
+
         serviceCollection.AddHostedService<MeterWorker>();
         serviceCollection.AddHostedService<MeterDisplayWorker>();
         serviceCollection.AddSingleton(_ => {
@@ -39,6 +43,7 @@ public static class MeterAppBuilderEx {
         serviceCollection.AddSingleton<ISubject<MeterData>>(_ => new Subject<MeterData>());
         serviceCollection.AddSingleton<IObservable<MeterData>>(provider =>
             provider.GetRequiredService<ISubject<MeterData>>());
+
         return serviceCollection;
     }
 }
