@@ -1,7 +1,44 @@
 ﻿@page "/"
+@implements IAsyncDisposable
+@using LTBlog.Data
+@using Microsoft.AspNetCore.SignalR.Client
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<p>612: </p>
 
-Welcome to your new Fluent Blazor app.
+@if (_state is { } s) {
+    <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
+    <p>@($"温度: {s.Temperature:0.0}°C")</p>
+    <p>@($"相对湿度: {s.Humidity:#0.00}%")</p>
+    <p>@($"体感温度: {s.HeatIndex:0.0}°C")</p>
+    <p>@($"海拔高度: {s.Altitude:0.0}m")</p>
+}
+
+是否连接服务： @_hubConnection?.State
+
+@code {
+    private HubConnection? _hubConnection;
+    private SensorState? _state;
+
+    protected override async Task OnInitializedAsync() {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl("https://api.littletoxic.top/sensor-hub")
+            .AddMessagePackProtocol()
+            .Build();
+
+        _hubConnection.On<SensorState>("ReceiveState", state => {
+            _state = state;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync() {
+        if (_hubConnection is not null) {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+}

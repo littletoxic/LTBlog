@@ -10,8 +10,22 @@ Host: api.littletoxic.top
 
 GET {{Api_HostAddress}}
 Host: littletoxic.top
-
+Accept-Encoding: gzip, deflate, br, zstd
 ###
 
 GET {{Api_HostAddress}}/not/exist
 Host: littletoxic.top
+Accept-Encoding: gzip, deflate, br, zstd
+
+###
+GET {{Api_HostAddress}}/_framework/blazor.webassembly.js
+Host: littletoxic.top
+Accept-Encoding: gzip, deflate, br, zstd
+
+###
+GET {{Api_HostAddress}}/_framework/blazor.webassembly.js
+Host: littletoxic.top
+
+
+###
+GET {{Api_HostAddress}}

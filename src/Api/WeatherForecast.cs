@@ -1,4 +1,4 @@
-namespace Api;
+namespace LTBlog.Api;
 
 public class WeatherForecast {
     public DateOnly Date {
