@@ -21,23 +21,21 @@ public class MeterWorker(
             await Task.Delay(1000 - _measurementDuration, stoppingToken);
 
             try {
-                var result = await bme280.ReadAsync();
-                var heatIndex = WeatherHelper.CalculateHeatIndex(
-                    result.Temperature ?? throw new InvalidOperationException("Temperature is null"),
-                    result.Humidity ?? throw new InvalidOperationException("Humidity is null"));
+                if (!bme280.TryReadTemperature(out var temperature) ||
+                    !bme280.TryReadPressure(out var pressure) ||
+                    !bme280.TryReadHumidity(out var humidity)) {
+                    throw new InvalidOperationException("Failed to read sensor data");
+                }
 
-                var altValue = WeatherHelper.CalculateAltitude(
-                    result.Pressure ?? throw new InvalidOperationException("Pressure is null"),
-                    WeatherHelper.MeanSeaLevel,
-                    result.Temperature ?? throw new InvalidOperationException("Temperature is null"));
+                var heatIndex = WeatherHelper.CalculateHeatIndex(temperature, humidity);
+                var altValue = WeatherHelper.CalculateAltitude(pressure, WeatherHelper.MeanSeaLevel, temperature);
 
                 var data = new MeterData(
                     altValue.Meters,
                     heatIndex.DegreesCelsius,
-                    result.Humidity?.Percent ?? throw new InvalidOperationException("Humidity is null"),
-                    result.Pressure?.Hectopascals ?? throw new InvalidOperationException("Pressure is null"),
-                    result.Temperature?.DegreesCelsius ?? throw new InvalidOperationException("Temperature is null"));
-
+                    humidity.Percent,
+                    pressure.Hectopascals,
+                    temperature.DegreesCelsius);
 
                 if (_loop++ % 600 == 0) {
                     logger.LogInformation("Temperature: {Temperature:0.#}\u00B0C", data.Temperature);
