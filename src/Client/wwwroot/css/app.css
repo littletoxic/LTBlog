@@ -185,3 +185,11 @@ code {
         right: unset;
     }
 }
+
+.siteheader .settings {
+    padding-right: 6px;
+    display: flex;
+    align-items: center;
+    margin-left: 0;
+    margin-right: 10px;
+}

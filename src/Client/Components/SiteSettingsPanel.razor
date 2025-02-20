@@ -1,0 +1,87 @@
+﻿@implements IDialogContentComponent
+
+<div>
+    <FluentDesignTheme @ref="_theme"
+                       @bind-CustomColor="_customColor"
+                       StorageName="theme" />
+
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+        <FluentSelect Label="主题颜色"
+                      Style="margin-bottom: 30px;"
+                      Width="100%"
+                      Items="@_customColors"
+                      Height="200px"
+                      @bind-SelectedOption="_customColor">
+            <OptionTemplate>
+                <FluentStack>
+                    <FluentIcon Value="@(new Icons.Filled.Size20.RectangleLandscape())"
+                                Color="Color.Custom"
+                                CustomColor="@context" />
+                    <FluentLabel>@context</FluentLabel>
+                </FluentStack>
+            </OptionTemplate>
+        </FluentSelect>
+
+        <FluentLabel>
+            这些值将被持久保存在 LocalStorage 中，并将在下次访问时恢复。<br /><br />
+            使用下面的 “重置设置按钮” 恢复默认颜色。
+        </FluentLabel>
+        <FluentDivider Style="width: 100%; margin: 1rem 0" />
+        <FluentPopover Style="width: 350px;" AnchorId="info" FixedPlacement="true" @bind-Open="@_popVisible">
+            <Header>重置网站设置</Header>
+            <Body>
+            <p>
+                该网站会在浏览器缓存和本地存储中存储主题和颜色设置，以及下载的样本、表情符号和图标。
+            </p>
+            <p>
+                您可以在浏览器的开发工具中检查缓存和存储的内容。如果您使用的是 Edge 或 Chrome 浏览器，可以进入 “应用程序” 选项卡，然后点击 “缓存存储” 或 “本地存储” 部分。<br />
+                在 Firefox 中，您可以进入 “存储” 选项卡，然后单击 “缓存存储” 或 “本地存储” 部分。
+            </p>
+
+            <p>
+                如果你觉得没有看到最新和最好的表情符号或图标，或者你想清除已存储的主题和颜色，请单击下面的按钮清除缓存并删除本地存储。
+            </p>
+            <p>
+                <strong>别担心，这<strong>仅</strong>会重置<strong>此</strong>网站的存储数据。它不会清除浏览器中其他网站的任何缓存！</strong>
+            </p>
+            </Body>
+        </FluentPopover>
+
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <FluentButton OnClick="@ResetSiteAsync">重置设置</FluentButton>
+            <FluentIcon Id="info" Value="@(new Icons.Regular.Size24.Info())" OnClick="@(() => _popVisible = !_popVisible)" />
+        </FluentStack>
+
+        <p style="margin-top: 1rem;">
+            <em>
+                <strong>@_status</strong>
+            </em>
+        </p>
+    </FluentStack>
+</div>
+
+@code {
+    private string? _status;
+    private bool _popVisible;
+    private FluentDesignTheme? _theme;
+    private string? _customColor;
+
+    private readonly string[] _customColors = ["#6F93E7", "#F07B7C"];
+
+    [Inject] public required ILogger<SiteSettingsPanel> Logger { get; set; }
+
+    //[Inject] public required GlobalState GlobalState { get; set; }
+
+    private Task ResetSiteAsync() {
+        const string msg = "网站设置已重置，缓存已清除！";
+
+        _theme?.ClearLocalStorageAsync();
+
+        Logger.LogInformation(msg);
+        _status = msg;
+
+        _customColor = "#6F93E7";
+        return Task.CompletedTask;
+    }
+
+}

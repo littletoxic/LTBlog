@@ -7,32 +7,32 @@
 
 <p>612: </p>
 
-@if (_state is { } s) {
+@if (_data is { } data) {
     <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
-    <p>@($"温度: {s.Temperature:0.0}°C")</p>
-    <p>@($"相对湿度: {s.Humidity:#0.00}%")</p>
-    <p>@($"体感温度: {s.HeatIndex:0.0}°C")</p>
-    <p>@($"海拔高度: {s.Altitude:0.0}m")</p>
+    <p>@($"温度: {data.Temperature:0.0}°C")</p>
+    <p>@($"相对湿度: {data.Humidity:#0.00}%")</p>
+    <p>@($"体感温度: {data.HeatIndex:0.0}°C")</p>
+    <p>@($"海拔高度: {data.Altitude:0.0}m")</p>
 }
 
 是否连接服务： @_hubConnection?.State
 
 @code {
     private HubConnection? _hubConnection;
-    private SensorState? _state;
+    private MeterData? _data;
 
     protected override async Task OnInitializedAsync() {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://api.littletoxic.top/sensor-hub")
-            .AddMessagePackProtocol()
-            .Build();
+        //_hubConnection = new HubConnectionBuilder()
+        //    .WithUrl("https://api.littletoxic.top/sensor-hub")
+        //    .AddMessagePackProtocol()
+        //    .Build();
 
-        _hubConnection.On<SensorState>("ReceiveState", state => {
-            _state = state;
-            InvokeAsync(StateHasChanged);
-        });
+        //_hubConnection.On<MeterData>("ReceiveState", data => {
+        //    _data = data;
+        //    InvokeAsync(StateHasChanged);
+        //});
 
-        await _hubConnection.StartAsync();
+        //await _hubConnection.StartAsync();
     }
 
     public async ValueTask DisposeAsync() {
