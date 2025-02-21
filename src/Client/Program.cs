@@ -1,4 +1,5 @@
 using LTBlog.Client;
+using LTBlog.Client.Infrastructure;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -19,5 +20,7 @@ builder.Services.AddScoped(_ => {
     return client;
 });
 builder.Services.AddFluentUIComponents();
+
+builder.Logging.AddUILogger();
 
 await builder.Build().RunAsync();

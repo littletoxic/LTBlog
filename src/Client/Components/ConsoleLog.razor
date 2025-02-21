@@ -1,0 +1,36 @@
+﻿@using LTBlog.Client.Infrastructure
+<FluentAccordion>
+    <FluentAccordionItem Expanded="_expanded" Heading="Console log">
+        <FluentIcon Value="@(new Icons.Regular.Size20.DocumentChevronDouble())" Color="@Color.Accent" Slot="start" />
+
+        @((MarkupString)ConsoleContent.Replace(Environment.NewLine, "<br/>"))
+        @if (!string.IsNullOrWhiteSpace(ConsoleContent)) {
+            <div style="display:flex">
+                <FluentSpacer />
+                <FluentButton @onclick="@(() => ConsoleContent = "")" Appearance="Appearance.Neutral" title="Clear log">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Eraser())" Color="@Color.Accent" />
+                </FluentButton>
+            </div>
+        }
+    </FluentAccordionItem>
+
+</FluentAccordion>
+
+@code {
+    private bool _expanded = true;
+
+    protected override void OnInitialized() {
+        UILogger.OnLogHandler += OnLineReceived;
+
+        base.OnInitialized();
+    }
+
+    // ReSharper disable once AsyncVoidMethod
+    // 用于事件处理程序
+    private async void OnLineReceived(string text) {
+        ConsoleContent = $"{ConsoleContent}{Environment.NewLine}[{DateTime.Now:HH:mm:ss}] - {text}";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [Parameter] public string ConsoleContent { get; set; } = "";
+}
