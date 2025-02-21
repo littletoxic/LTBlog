@@ -1,0 +1,54 @@
+﻿.navmenu-icon {
+    display: none;
+}
+
+nav.sitenav {
+    padding: 1.5rem 1rem;
+    height: calc(100dvh - 90px);
+    width: 20rem;
+    overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+    nav.sitenav {
+        width: 100%;
+        height: calc(100dvh - 50px);
+    }
+
+    .navmenu {
+        width: 100%;
+    }
+
+    #navmenu-toggle {
+        appearance: none;
+    }
+
+    .navmenu-icon {
+        cursor: pointer;
+        z-index: 10;
+        display: block;
+        position: absolute;
+        top: 15px;
+        left: unset;
+        right: 20px;
+        width: 20px;
+        height: 20px;
+        border: none;
+    }
+
+    #navmenu-toggle ~ nav {
+        display: none;
+    }
+
+    #navmenu-toggle:checked ~ nav {
+        display: block;
+    }
+
+    #navmenu-toggle ~ article {
+        display: block;
+    }
+
+    #navmenu-toggle:checked ~ article {
+        display: none;
+    }
+}

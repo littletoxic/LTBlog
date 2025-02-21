@@ -1,0 +1,52 @@
+﻿@page "/612"
+@implements IAsyncDisposable
+@using LTBlog.Data
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IConfiguration Configuration
+@inject IWebAssemblyHostEnvironment Environment
+
+<PageTitle>612</PageTitle>
+
+<h1>612: </h1>
+
+@if (_data is not null) {
+    <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
+    <p>@($"温度: {_data.Temperature:0.0}°C")</p>
+    <p>@($"相对湿度: {_data.Humidity:#0.00}%")</p>
+    <p>@($"体感温度: {_data.HeatIndex:0.0}°C")</p>
+    <p>@($"海拔高度: {_data.Altitude:0.0}m")</p>
+}
+
+是否连接服务： @_hubConnection?.State
+
+@code {
+    private HubConnection? _hubConnection;
+    private MeterData? _data;
+
+    protected override async Task OnInitializedAsync() {
+        var backendUrl = Configuration["BackendUrl"]; //?? throw new InvalidOperationException("配置中没有 BackendUrl");
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{backendUrl}/meter-hub", options => {
+                // 开发使用
+                if (Environment.IsDevelopment())
+                    options.Headers.Add("X-Forwarded-Host", "api.littletoxic.top");
+            })
+            .AddMessagePackProtocol()
+            .Build();
+
+        _hubConnection.On<MeterData>("ReceiveState", data => {
+            _data = data;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync() {
+        if (_hubConnection is not null) {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+}

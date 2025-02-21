@@ -1,26 +1,33 @@
 ﻿@inherits LayoutComponentBase
 
 <FluentLayout>
-    <FluentHeader Class="siteheader">
-        <div>Blog</div>
-        <FluentSpacer />
-        <div class="settings">
-            <SiteSettings />
-        </div>
-    </FluentHeader>
+    <div class="siteheader">
+        <FluentHeader>
+            <div>Blog</div>
+            <FluentSpacer />
+            <div class="settings">
+                <SiteSettings />
+            </div>
+        </FluentHeader>
+    </div>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
         <FluentBodyContent Class="body-content">
-            <ErrorBoundary>
-                <ChildContent>
-                    <div class="content">
-                        @Body
-                    </div>
-                </ChildContent>
-                <ErrorContent Context="ex">
-                    <div class="blazor-error-boundary">@ex.Message</div>
-                </ErrorContent>
-            </ErrorBoundary>
+            <div class="content">
+                <article id="article">
+                    <ErrorBoundary @ref="_errorBoundary">
+                        <ChildContent>
+                            @Body
+                        </ChildContent>
+                        <ErrorContent Context="ex">
+                            <div class="blazor-error-boundary">@ex.Message</div>
+                        </ErrorContent>
+                    </ErrorBoundary>
+                </article>
+                <aside>
+                    <ConsoleLog />
+                </aside>
+            </div>
         </FluentBodyContent>
         <FluentDialogProvider />
     </FluentStack>
@@ -30,3 +37,14 @@
         <a href="https://learn.microsoft.com/en-us/aspnet/core/blazor" target="_blank">About Blazor</a>
     </FluentFooter>
 </FluentLayout>
+
+@code {
+    private ErrorBoundary? _errorBoundary;
+
+    // 生命周期见 https://learn.microsoft.com/zh-cn/aspnet/core/blazor/components/lifecycle
+    protected override void OnParametersSet() {
+        // 在后续页面导航事件中将 ErrorBoundary 重置为非错误状态
+        _errorBoundary?.Recover();
+    }
+
+}

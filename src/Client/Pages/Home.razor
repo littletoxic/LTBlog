@@ -1,52 +1,99 @@
 ﻿@page "/"
-@implements IAsyncDisposable
-@using LTBlog.Data
-@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
-@using Microsoft.AspNetCore.SignalR.Client
-@inject IConfiguration Configuration
-@inject IWebAssemblyHostEnvironment Environment
+@using ICSharpCode.Decompiler.CSharp
 
 <PageTitle>Home</PageTitle>
 
-<p>612: </p>
+<h1>主页</h1>
 
-@if (_data is not null) {
-    <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
-    <p>@($"温度: {_data.Temperature:0.0}°C")</p>
-    <p>@($"相对湿度: {_data.Humidity:#0.00}%")</p>
-    <p>@($"体感温度: {_data.HeatIndex:0.0}°C")</p>
-    <p>@($"海拔高度: {_data.Altitude:0.0}m")</p>
-}
+<h2>.NET 程序集反编译到 IL</h2>
 
-是否连接服务： @_hubConnection?.State
+<p>下面的内容现不可用</p>
+
+<p>
+    详见
+    <FluentAnchor
+        Href="https://github.com/dotnet/aspnetcore/issues/57429"
+        Appearance="Appearance.Hypertext">
+        .GetAwaiter().GetResult() limitation in Blazor WebAssembly #57429
+    </FluentAnchor>
+</p>
+
+<p>
+    使用的
+    <FluentAnchor
+        Href="https://www.nuget.org/packages/ICSharpCode.Decompiler"
+        Appearance="Appearance.Hypertext">
+        ICSharpCode.Decompiler
+    </FluentAnchor> 库在内部调用了 <code>.GetAwaiter().GetResult()</code> 方法
+</p>
+
+<div>
+    <FluentInputFile Id="my-file-uploader"
+                     Mode="InputFileMode.SaveToTemporaryFolder"
+                     MaximumFileSize="@(100 * 1024 * 1024)"
+                     @bind-ProgressPercent="@_progressPercent"
+                     OnFileUploaded="@OnUploaded"
+                     Style="height: 300px;">
+        <ChildContent>
+            <label for="my-file-uploader">
+                <FluentIcon Value="@(new Icons.Regular.Size24.ArrowUpload())" />
+            </label>
+
+            <div>
+                Drag files here you wish to upload,
+                or <label for="my-file-uploader">browse</label>
+                for them<span style="color: red;">*</span>.
+                <br />
+            </div>
+
+            <div>
+                <br />
+                <a href="#">Read more about our supported file formats.</a>
+            </div>
+        </ChildContent>
+    </FluentInputFile>
+</div>
+
+<div>
+    <FluentButton Appearance="Appearance.Accent" OnClick="DecompileToCSharp">反编译为 C#</FluentButton>
+</div>
+
+<div>
+    <h3>反编译结果</h3>
+    <pre>@_result</pre>
+</div>
+
+<hr />
+
+<h2>
+    语录
+</h2>
+
+<blockquote>
+    <p>哪种更加高尚。默然忍受命运暴虐的毒箭，或是挺身反抗人世无涯的苦难，通过斗争把它们扫个干净。</p>
+</blockquote>
+<FluentButton Appearance="Appearance.Accent">换一个</FluentButton>
 
 @code {
-    private HubConnection? _hubConnection;
-    private MeterData? _data;
+    private int _progressPercent;
+    private FileInfo? _file;
 
-    protected override async Task OnInitializedAsync() {
-        var backendUrl = Configuration["BackendUrl"]; //?? throw new InvalidOperationException("配置中没有 BackendUrl");
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{backendUrl}/meter-hub", options => {
-                // 开发使用
-                if (Environment.IsDevelopment())
-                    options.Headers.Add("X-Forwarded-Host", "api.littletoxic.top");
-            })
-            .AddMessagePackProtocol()
-            .Build();
+    private void OnUploaded(FluentInputFileEventArgs e) {
+        _file = e.LocalFile;
 
-        _hubConnection.On<MeterData>("ReceiveState", data => {
-            _data = data;
-            InvokeAsync(StateHasChanged);
-        });
-
-        await _hubConnection.StartAsync();
+        _progressPercent = 0;
     }
 
-    public async ValueTask DisposeAsync() {
-        if (_hubConnection is not null) {
-            await _hubConnection.DisposeAsync();
+    private string _result = string.Empty;
+
+    private void DecompileToCSharp() {
+        if (_file == null) {
+            _result = "请先上传一个 DLL 文件。";
+            return;
         }
+
+        var decompiler = new CSharpDecompiler(_file.FullName, new());
+        _result = decompiler.DecompileWholeModuleAsString();
     }
 
 }
