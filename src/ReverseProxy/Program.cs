@@ -14,12 +14,17 @@ builder.WebHost.ConfigureKestrel(kestrel => {
     kestrel.ConfigureHttpsDefaults(options => { options.UseLettuceEncrypt(kestrel.ApplicationServices); });
 });
 
+builder.Services.AddCors(options => {
+    options.AddPolicy("backend", policy => policy.WithOrigins("api.littletoxic.top"));
+});
+
 var app = builder.Build();
+
+app.UseCors();
 
 app.MapReverseProxy();
 app.MapStaticAssets("Client.staticwebassets.endpoints.json")
-    .WithMetadata(new HostAttribute("littletoxic.top", "localhost"))
-    .Add(endpointBuilder => endpointBuilder.DisplayName = ((RouteEndpointBuilder)endpointBuilder).RoutePattern.RawText);
-//app.MapFallbackToFile("index.html").WithMetadata(new HostAttribute("littletoxic.top", "localhost"));
+    .WithMetadata(new HostAttribute("littletoxic.top", "localhost"));
+app.MapFallbackToFile("index.html").WithMetadata(new HostAttribute("littletoxic.top", "localhost"));
 
 await app.RunAsync();

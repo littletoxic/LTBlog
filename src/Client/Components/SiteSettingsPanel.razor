@@ -1,4 +1,5 @@
 ﻿@implements IDialogContentComponent
+@inject ILogger<SiteSettingsPanel> Logger
 
 <div>
     <FluentDesignTheme @ref="_theme"
@@ -67,8 +68,6 @@
     private string? _customColor;
 
     private readonly string[] _customColors = ["#6F93E7", "#F07B7C"];
-
-    [Inject] public required ILogger<SiteSettingsPanel> Logger { get; set; }
 
     //[Inject] public required GlobalState GlobalState { get; set; }
 

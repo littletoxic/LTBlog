@@ -1,3 +1,4 @@
+using LTBlog.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LTBlog.Api.Controllers;
