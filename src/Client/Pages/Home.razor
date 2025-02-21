@@ -1,18 +1,21 @@
 ﻿@page "/"
 @implements IAsyncDisposable
 @using LTBlog.Data
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @using Microsoft.AspNetCore.SignalR.Client
+@inject IConfiguration Configuration
+@inject IWebAssemblyHostEnvironment Environment
 
 <PageTitle>Home</PageTitle>
 
 <p>612: </p>
 
-@if (_data is { } data) {
+@if (_data is not null) {
     <p>@($"时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")</p>
-    <p>@($"温度: {data.Temperature:0.0}°C")</p>
-    <p>@($"相对湿度: {data.Humidity:#0.00}%")</p>
-    <p>@($"体感温度: {data.HeatIndex:0.0}°C")</p>
-    <p>@($"海拔高度: {data.Altitude:0.0}m")</p>
+    <p>@($"温度: {_data.Temperature:0.0}°C")</p>
+    <p>@($"相对湿度: {_data.Humidity:#0.00}%")</p>
+    <p>@($"体感温度: {_data.HeatIndex:0.0}°C")</p>
+    <p>@($"海拔高度: {_data.Altitude:0.0}m")</p>
 }
 
 是否连接服务： @_hubConnection?.State
@@ -22,17 +25,22 @@
     private MeterData? _data;
 
     protected override async Task OnInitializedAsync() {
-        //_hubConnection = new HubConnectionBuilder()
-        //    .WithUrl("https://api.littletoxic.top/sensor-hub")
-        //    .AddMessagePackProtocol()
-        //    .Build();
+        var backendUrl = Configuration["BackendUrl"]; //?? throw new InvalidOperationException("配置中没有 BackendUrl");
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{backendUrl}/meter-hub", options => {
+                // 开发使用
+                if (Environment.IsDevelopment())
+                    options.Headers.Add("X-Forwarded-Host", "api.littletoxic.top");
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-        //_hubConnection.On<MeterData>("ReceiveState", data => {
-        //    _data = data;
-        //    InvokeAsync(StateHasChanged);
-        //});
+        _hubConnection.On<MeterData>("ReceiveState", data => {
+            _data = data;
+            InvokeAsync(StateHasChanged);
+        });
 
-        //await _hubConnection.StartAsync();
+        await _hubConnection.StartAsync();
     }
 
     public async ValueTask DisposeAsync() {

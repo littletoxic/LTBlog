@@ -52,8 +52,6 @@ if (app.Environment.IsDevelopment()) {
 app.UseAuthorization();
 
 app.MapControllers();
-if (app.Environment.IsProduction()) {
-    app.MapHub<MeterHub>("/meter-hub");
-}
+app.MapHub<MeterHub>("/meter-hub");
 
 await app.RunAsync();

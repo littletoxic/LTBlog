@@ -9,7 +9,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(_ => {
     var client = new HttpClient {
-        BaseAddress = new(builder.Configuration["BackendUrl"] ?? throw new("配置中没有 BackendUrl"))
+        BaseAddress = new(builder.Configuration["BackendUrl"] ?? throw new InvalidOperationException("配置中没有 BackendUrl"))
     };
     // 开发时使用
     if (builder.HostEnvironment.IsDevelopment()) {
