@@ -7,25 +7,27 @@
 
 <h2>.NET 程序集反编译到 IL</h2>
 
-<p>下面的内容现不可用</p>
+<blockquote>
+    <p>下面的内容现不可用</p>
 
-<p>
-    详见
-    <FluentAnchor
-        Href="https://github.com/dotnet/aspnetcore/issues/57429"
-        Appearance="Appearance.Hypertext">
-        .GetAwaiter().GetResult() limitation in Blazor WebAssembly #57429
-    </FluentAnchor>
-</p>
+    <p>
+        详见
+        <FluentAnchor
+            Href="https://github.com/dotnet/aspnetcore/issues/57429"
+            Appearance="Appearance.Hypertext">
+            .GetAwaiter().GetResult() limitation in Blazor WebAssembly #57429
+        </FluentAnchor>
+    </p>
 
-<p>
-    使用的
-    <FluentAnchor
-        Href="https://www.nuget.org/packages/ICSharpCode.Decompiler"
-        Appearance="Appearance.Hypertext">
-        ICSharpCode.Decompiler
-    </FluentAnchor> 库在内部调用了 <code>.GetAwaiter().GetResult()</code> 方法
-</p>
+    <p>
+        使用的
+        <FluentAnchor
+            Href="https://www.nuget.org/packages/ICSharpCode.Decompiler"
+            Appearance="Appearance.Hypertext">
+            ICSharpCode.Decompiler
+        </FluentAnchor> 库在内部调用了 <code>.GetAwaiter().GetResult()</code> 方法
+    </p>
+</blockquote>
 
 <div>
     <FluentInputFile Id="my-file-uploader"

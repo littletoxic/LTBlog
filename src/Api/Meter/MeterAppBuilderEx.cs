@@ -6,13 +6,14 @@ using Iot.Device.Bmxx80.PowerMode;
 using Iot.Device.CharacterLcd;
 using Iot.Device.Pcx857x;
 using LTBlog.Data;
-using Microsoft.Extensions.Hosting;
 
 namespace LTBlog.Api.Meter;
 
 public static class MeterAppBuilderEx {
-    public static IServiceCollection
-        AddMeterWorker(this IServiceCollection serviceCollection, IWebHostEnvironment env) {
+    public static IServiceCollection AddMeterWorker(
+        this IServiceCollection serviceCollection,
+        IWebHostEnvironment env) {
+
         if (!env.IsProduction()) return serviceCollection;
 
         serviceCollection.AddHostedService<MeterWorker>();

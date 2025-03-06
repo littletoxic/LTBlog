@@ -12,17 +12,17 @@
   </ItemGroup>
 
   <Target Name="PublishClient" BeforeTargets="Build"
-          Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="dotnet publish ../Client -c Debug" />
+          Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="dotnet publish ../Client -c Release" />
     <Message Importance="high" Text="Publishing Client project..." />
   </Target>
 
   <!--build 前可能需要将 bin 文件夹删除-->
   <Target Name="CopyFiles" AfterTargets="Build"
-          Condition="'$(Configuration)' == 'Debug'">
+          Condition="'$(Configuration)' == 'Release'">
     <Message Importance="high" Text="Copying files from Client project..." />
     <ItemGroup>
-      <Assets Include="..\Client\bin\Debug\net9.0\publish\**\*" />
+      <Assets Include="..\Client\bin\Release\net9.0\publish\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(Assets)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
   </Target>
