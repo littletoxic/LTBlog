@@ -1,164 +1,99 @@
 ﻿@page "/image-converter"
+@inject ILogger<ImageConverter> Logger
+@using System.IO.Compression
 @using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.Formats
 
 <PageTitle>图片格式转换</PageTitle>
 
 <h1>图片格式转换</h1>
 
-<div class="mb-3">
-    <FluentSelect @bind-Value="selectedFormat" TOption="string" Items="@formats" OptionText="item => item" OptionValue="item => item" Label="目标格式" />
-</div>
+@if (_convertItems.Count == 0) {
+    <FluentInputFile Id="my-file-uploader"
+                     Mode="InputFileMode.SaveToTemporaryFolder"
+                     MaximumFileSize="@(100 * 1024 * 1024)"
+                     Style="height: 300px;"
+                     Multiple="true"
+                     OnCompleted="OnFilesUploaded"
+                     Accept="image/*">
+        <ChildContent>
+            <label for="my-file-uploader">
+                <FluentIcon Value="@(new Icons.Regular.Size24.ArrowUpload())" />
+            </label>
 
-<FluentInputFile Id="my-file-uploader"
-                 Mode="InputFileMode.SaveToTemporaryFolder"
-                 MaximumFileSize="@(100 * 1024 * 1024)"
-                 Style="height: 300px;"
-                 Multiple="true"
-                 OnCompleted="OnCompleted"
-                 Accept="image/*">
-    <ChildContent>
-        <label for="my-file-uploader">
-            <FluentIcon Value="@(new Icons.Regular.Size24.ArrowUpload())" />
-        </label>
+            <div>
+                拖拽图片文件到这里进行上传,
+                或 <label for="my-file-uploader">浏览</label>
+                选择文件<span style="color: red;">*</span>。
+                <br />
+            </div>
 
-        <div>
-            Drag files here you wish to upload,
-            or <label for="my-file-uploader">browse</label>
-            for them<span style="color: red;">*</span>.
-            <br />
-        </div>
+        </ChildContent>
+    </FluentInputFile>
+} else {
+    <ul>
+        @foreach (var item in _convertItems) {
+            <li style="display: flex">
+                <div>
+                    <div>@item.OriginalFile</div>
+                </div>
+                <div>
+                    <FluentSelect @bind-SelectedOption="@item.TargetFormat" OptionText="f => f!.Name" Items="@_formats" Placeholder="请选择" />
+                </div>
+            </li>
+        }
+    </ul>
+    <FluentDataGrid Items="@_convertItems.AsQueryable()" GenerateHeader="GenerateHeaderOption.None">
+        <PropertyColumn Property="@(i => i.OriginalFilename)" />
+        <TemplateColumn>
+            <FluentSelect @bind-SelectedOption="@context.TargetFormat" OptionText="f => f!.Name" Items="@_formats" Placeholder="请选择" />
 
-    </ChildContent>
-</FluentInputFile>
-
-<div class="mt-4">
-    @if (convertedFiles.Count > 0) {
-        <h3>转换结果</h3>
-        <FluentDataGrid Items="@convertedFiles.AsQueryable()" TGridItem="ConvertedFile" ResizableColumns="true">
-            <PropertyColumn Property="@(f => f.OriginalFilename)" Title="原文件名" />
-            <PropertyColumn Property="@(f => f.ConvertedFilename)" Title="转换后文件名" />
-            <TemplateColumn Title="操作">
-                <FluentButton Appearance="Appearance.Accent">下载</FluentButton>
-            </TemplateColumn>
-        </FluentDataGrid>
-    }
-</div>
-
-<FluentProgressRing Visible="@isLoading" />
+        </TemplateColumn>
+        <PropertyColumn Property="@(i => i.OriginalFile.Length)" />
+        <PropertyColumn Property="@(i => i.OriginalFilename)" />
+    </FluentDataGrid>
+}
+<FluentCard Height="300">
+    <FluentSelect OptionText="f => f.Name" Items="@_formats" Placeholder="请选择" />
+</FluentCard>
+<FluentCard AreaRestricted="false" Height="300">
+    <FluentSelect OptionText="f => f.Name" Items="@_formats" Placeholder="请选择" />
+</FluentCard>
 
 @code {
+    private readonly IEnumerable<IImageFormat> _formats = Configuration.Default.ImageFormats;
+    private readonly List<ConvertItem> _convertItems = [];
 
-    private string selectedFormat = "png";
-    private List<string> formats = new() { "png", "jpg", "gif", "bmp" };
-    private List<ConvertedFile> convertedFiles = new();
-    private bool isLoading = false;
+    private class ConvertItem {
+        public required string OriginalFilename { get; init; }
+        public string? ConvertedFilename { get; set; }
+        public required FileInfo OriginalFile { get; init; }
+        public FileInfo? ConvertedFile { get; set; }
+        public ConvertStatus Status { get; set; } = ConvertStatus.Pending;
+        public IImageFormat? TargetFormat { get; set; }
+    }
 
-    private class ConvertedFile {
-        public string OriginalFilename { get; set; } = string.Empty;
-        public string ConvertedFilename { get; set; } = string.Empty;
-        public byte[] FileData { get; set; } = Array.Empty<byte>();
-        public string ContentType { get; set; } = string.Empty;
+    private enum ConvertStatus : byte {
+        Pending,
+        Processing,
+        Completed,
+        Failed
     }
 
 
-    private async Task OnCompleted(IEnumerable<FluentInputFileEventArgs> files) {
-        isLoading = true;
-        convertedFiles.Clear();
-
-        try {
-            foreach (var file in files) {
-                if (file.LocalFile != null && file.LocalFile.Exists) {
-                    // 检查是否为图像文件
-                    if (!file.ContentType.StartsWith("image/")) {
-                        continue;
-                    }
-
-                    var convertedFile = await ConvertImageFormat(file);
-                    if (convertedFile != null) {
-                        convertedFiles.Add(convertedFile);
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            Console.WriteLine($"转换过程中出现错误: {ex.Message}");
-        } finally {
-            isLoading = false;
+    private void OnFilesUploaded(IEnumerable<FluentInputFileEventArgs> files) {
+        foreach (var file in files) {
+            _convertItems.Add(new() {
+                // 由于 InputFileMode.SaveToTemporaryFolder，所以 LocalFile 不应该为空
+                OriginalFile = file.LocalFile ?? throw new ArgumentNullException(),
+                OriginalFilename = file.Name
+            });
         }
     }
 
-    private async Task<ConvertedFile?> ConvertImageFormat(FluentInputFileEventArgs file) {
-        // 确保本地文件存在
-        if (file.LocalFile == null || !file.LocalFile.Exists)
-            return null;
-
-        string extension = GetExtensionFromFormat(selectedFormat);
-        string convertedFilename = Path.GetFileNameWithoutExtension(file.Name) + extension;
-        string contentType = GetContentTypeFromFormat(selectedFormat);
-
-        try {
-            // 读取图像
-            using var image = await Image.LoadAsync(file.LocalFile.FullName);
-
-            // 转换并保存到内存流
-            using var memoryStream = new MemoryStream();
-            await SaveToStream(image, memoryStream, selectedFormat);
-
-            // 获取转换后的字节数组
-            var fileData = memoryStream.ToArray();
-
-            return new ConvertedFile {
-                OriginalFilename = file.Name,
-                ConvertedFilename = convertedFilename,
-                FileData = fileData,
-                ContentType = contentType
-            };
-        } catch (Exception ex) {
-            Console.WriteLine($"转换图像时出错: {ex.Message}");
-            return null;
-        }
-    }
-
-    private async Task SaveToStream(Image image, Stream stream, string format) {
-        switch (format.ToLower()) {
-            case "png":
-                await image.SaveAsPngAsync(stream);
-                break;
-            case "jpg":
-            case "jpeg":
-                await image.SaveAsJpegAsync(stream);
-                break;
-            case "gif":
-                await image.SaveAsGifAsync(stream);
-                break;
-            case "bmp":
-                await image.SaveAsBmpAsync(stream);
-                break;
-            default:
-                await image.SaveAsPngAsync(stream);
-                break;
-        }
-    }
-
-    private string GetExtensionFromFormat(string format) {
-        return format.ToLower() switch {
-            "jpg" => ".jpg",
-            "jpeg" => ".jpg",
-            "png" => ".png",
-            "gif" => ".gif",
-            "bmp" => ".bmp",
-            _ => ".png"
-        };
-    }
-
-    private string GetContentTypeFromFormat(string format) {
-        return format.ToLower() switch {
-            "jpg" => "image/jpeg",
-            "jpeg" => "image/jpeg",
-            "png" => "image/png",
-            "gif" => "image/gif",
-            "bmp" => "image/bmp",
-            _ => "image/png"
-        };
+    protected override void OnInitialized() {
+        Logger.LogInformation("ImageConverter 初始化");
+        Logger.LogInformation("{c}", Configuration.Default.ImageFormats);
     }
 
 
